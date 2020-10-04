@@ -4,6 +4,8 @@ from input_sorting.transform_data_structure import DataTransformation
 from power_transformation.power_transformation import ElectricTransformation
 from algorithms.barsim_algorithm import BarsimAlgorithm
 
+from benchmark.benchmark import Benchmark
+
 import rx
 
 
@@ -15,12 +17,14 @@ class QueryOne():
         self.bf = BarsimAlgorithm(
             q_size=100,
         )
+        self.bm = Benchmark()
     
     def run(self):
         rx.create(
             lambda o, s: KafkaConsumer().create_subscription(topics=["Input", ], observer=o, scheduler=s)
         ).pipe(
             split_payload(),
+            self.bm.inject_time("start_time"),
             self.dt.transform_to_pandas(),
             self.et.active_power(),
             self.et.apparent_power(),
@@ -32,9 +36,9 @@ class QueryOne():
             self.bf.compute_loss(),
             self.bf.process_detected_event(),
             self.bf.prepare_result(),
-            
+            self.bm.get_latency("start_time")
         ).subscribe(
-            on_next=lambda x: x,
+            on_next=lambda x: self.bm.calc_mean_latency(x),
             on_error=lambda error: print(error),
             on_completed=lambda: print("Query 1 done!")
         )

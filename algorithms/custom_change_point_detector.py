@@ -5,12 +5,13 @@ import rx
 from queue import Queue
 from scipy.signal import savgol_filter
 
+from memory_profiler import profile
+
 
 class ChangePointDetector():
     
     def __init__(self, window_size):
         self.window_size = window_size
-    
     def apply_filter(self, filter_class, q_size, **kwargs):
         
         available_choices = {
@@ -174,9 +175,7 @@ class ChangePointDetector():
                     observer.on_completed,
                     scheduler
                 )
-            
             return rx.create(subscribe)
-        
         return _calc
     
     def mark_sign_change_points(self):

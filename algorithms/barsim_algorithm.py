@@ -10,6 +10,7 @@ import rx
 import itertools
 import math
 
+
 class BarsimAlgorithm():
     
     def __init__(self, q_size):
@@ -59,14 +60,17 @@ class BarsimAlgorithm():
                     X = utils.as_float_array(X)
                     self._update_clustering(X)
                     
-                    obj = {
+                    obj_2 = {
                         "i_min": np.min(obj[["i"]]),
                         "i_max": np.max(obj[["i"]]),
                         "cluster": self.clustering,
                         "X": X
                     }
-
-                    observer.on_next(obj)
+                    
+                    if "start_time" in obj.keys():
+                        obj_2["start_time"] = obj.iloc[-1]["start_time"]
+                    
+                    observer.on_next(obj_2)
 
                 return source.subscribe(
                     on_next,
@@ -94,7 +98,11 @@ class BarsimAlgorithm():
                         self.reset_window = True
                         observer.on_next(obj)
                     else:
-                        observer.on_next({"s": int(recent_idx), "d": False, "s_event":-1})
+                        result = {"s": int(recent_idx), "d": False, "s_event":-1}
+                        if "start_time" in obj.keys():
+                            result["start_time"] = obj["start_time"]
+                        
+                        observer.on_next(result)
 
                 return source.subscribe(
                     on_next,
@@ -117,7 +125,10 @@ class BarsimAlgorithm():
                             self.reset_window = True
                             observer.on_next(obj)
                         else:
-                            observer.on_next({"s": obj["i_max"], "d": False, "s_event": -1})
+                            result = {"s": int(obj["i_max"]), "d": False, "s_event": -1}
+                            if "start_time" in obj.keys():
+                                result["start_time"] = obj["start_time"]
+                            observer.on_next(result)
                     else:
                         observer.on_next(obj)
                         
@@ -196,8 +207,11 @@ class BarsimAlgorithm():
                         mean_idx = math.floor((obj["event_edges"][0] + obj["event_edges"][1]) / 2)
                         start_idx = obj["i_min"]
                         event_idx = int(start_idx + mean_idx + 1)
-                        
-                        observer.on_next({"s": int(obj["i_max"]), "d": True, "s_event": event_idx + 1})
+
+                        result = {"s": int(obj["i_max"]), "d": True, "s_event": event_idx + 1}
+                        if "start_time" in obj.keys():
+                            result["start_time"] = obj["start_time"]
+                        observer.on_next(result)
                     else:
                         observer.on_next(obj)
 
@@ -212,7 +226,7 @@ class BarsimAlgorithm():
     
     def fit(self):
         self.is_fitted = True
-        
+    
     def _update_clustering(self, X):
         dbscan = DBSCAN(eps=0.03, min_samples=2, n_jobs=-1).fit(X)
         cluster_labels = np.array(dbscan.labels_)
@@ -317,4 +331,3 @@ class BarsimAlgorithm():
         
         else:
             raise IndexError("Status code not in available choices. Either choose {break} or {continue}.")
-        

@@ -9,13 +9,16 @@ class DataTransformation():
             def subscribe(observer, scheduler):
                 def on_next(obj):
                     df = pd.DataFrame.from_dict(obj["records"])
-                    
-                    obj = {
+
+                    obj_2 = {
                         "i": obj['i'],
                         "records": df
                     }
+
+                    if "start_time" in obj.keys():
+                        obj_2["start_time"] = obj["start_time"]
                     
-                    observer.on_next(obj)
+                    observer.on_next(obj_2)
                 
                 return source.subscribe(
                     on_next,
