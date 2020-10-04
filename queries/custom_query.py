@@ -2,19 +2,17 @@ from kafka_connector.consumer import KafkaConsumer
 from input_sorting.separate_payload_from_kafka_message import split_payload
 from input_sorting.transform_data_structure import DataTransformation
 from power_transformation.power_transformation import ElectricTransformation
-from barsim_steps.barsim_algorithm import BarsimAlgorithm
+from algorithms.custom_change_point_detector import ChangePointDetector
 
 import rx
+from rx import operators as ops
 
-
-class QueryOne():
+class CustomQuery():
     
     def __init__(self):
         self.et = ElectricTransformation()
         self.dt = DataTransformation()
-        self.bf = BarsimAlgorithm(
-            q_size=100,
-        )
+        self.cd = ChangePointDetector(window_size=5)
     
     def run(self):
         rx.create(
@@ -26,13 +24,11 @@ class QueryOne():
             self.et.apparent_power(),
             self.et.reactive_power(),
             self.dt.remove_payload(keys=["records"]),
-            self.bf.build_window(),
-            self.bf.predict(),
-            self.bf.check_event_model_constraints(0.8),
-            self.bf.compute_loss(),
-            self.bf.process_detected_event(),
-            self.bf.prepare_result(),
-            
+            self.cd.apply_filter(filter_class="sma", q_size=10),
+            self.cd.apply_filter(filter_class="sma", q_size=5),
+            self.cd.calc_p_q_diff(),
+            self.cd.mark_sign_change_points(),
+            ops.filter(lambda x: x["change_point"])
         ).subscribe(
             on_next=lambda x: print(x),
             on_error=lambda error: print(error),

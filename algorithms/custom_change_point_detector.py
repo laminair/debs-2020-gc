@@ -11,24 +11,24 @@ class ChangePointDetector():
     def __init__(self, window_size):
         self.window_size = window_size
     
-    def apply_filter(self, filter, **kwargs):
+    def apply_filter(self, filter_class, q_size, **kwargs):
         
         available_choices = {
-            "sma": self.simple_moving_average(),
-            "moving_median": self.moving_median(),
-            "sav_gol": self.savitzky_golay()
+            "sma": self.simple_moving_average(q_size=q_size),
+            "moving_median": self.moving_median(q_size=q_size),
+            "sav_gol": self.savitzky_golay(q_size=q_size)
         }
         
-        if not filter in available_choices.keys():
+        if not filter_class in available_choices.keys():
             raise AssertionError(f"Make sure to choose an available filter mechanism. "
                                  f"Choices are: {available_choices.keys()}")
         else:
-            return available_choices[filter]
+            return available_choices[filter_class]
     
-    def simple_moving_average(self):
+    def simple_moving_average(self, q_size):
         def _sma(source):
             def subscribe(observer, scheduler):
-                window = [Queue(maxsize=self.window_size), ]
+                window = [Queue(maxsize=q_size), ]
                 
                 def on_next(obj):
                     nonlocal window
@@ -65,10 +65,10 @@ class ChangePointDetector():
         
         return _sma
     
-    def moving_median(self):
+    def moving_median(self, q_size):
         def _mm(source):
             def subscribe(observer, scheduler):
-                window = [Queue(), ]
+                window = [Queue(maxsize=q_size), ]
                 
                 def on_next(obj):
                     nonlocal window
@@ -77,7 +77,7 @@ class ChangePointDetector():
                         observer.on_error("Error occurred when applying SMA de-noising. Make sure to pass dict "
                                           "elements.")
                     else:
-                        if len(window[0].queue) == self.window_size:
+                        if window[0].full():
                             window[0].get_nowait()
                             window[0].put_nowait((obj['i'], obj))
                         else:
@@ -105,10 +105,10 @@ class ChangePointDetector():
         
         return _mm
     
-    def savitzky_golay(self):
+    def savitzky_golay(self, q_size):
         def _savgol(source):
             def subscribe(observer, scheduler):
-                window = [Queue(), ]
+                window = [Queue(maxsize=q_size), ]
                 
                 def on_next(obj):
                     nonlocal window
@@ -117,7 +117,7 @@ class ChangePointDetector():
                         observer.on_error("Error occurred when applying SMA de-noising. Make sure to pass dict "
                                           "elements.")
                     else:
-                        if len(window[0].queue) == self.window_size:
+                        if window[0].full():
                             window[0].get_nowait()
                             window[0].put_nowait((obj['i'], obj))
                         else:
@@ -183,16 +183,20 @@ class ChangePointDetector():
         def _mark(source):
             def subscribe(observer, scheduler):
                 predecessor = [0]
+                last_event = [0]
                 
                 def on_next(obj):
                     nonlocal predecessor
+                    nonlocal last_event
+                    
                     current_sign = np.sign(obj['diff_smooth'])
                     
                     if predecessor[0] == 0:
                         predecessor[0] = current_sign
                     
-                    if predecessor[0] != current_sign:
+                    if predecessor[0] != current_sign and (obj["i"] > last_event[0] + self.window_size or last_event[0] == 0):
                         obj["change_point"] = True
+                        last_event[0] = obj["i"] + 1
                     else:
                         obj["change_point"] = False
                     
