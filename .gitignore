@@ -3,3 +3,4 @@ venv/*
 .vcs/*
 
 __pycache__/*
+barsim_steps/__pycache__/*
