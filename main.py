@@ -19,9 +19,9 @@ if __name__ == '__main__':
     # end_time = time()
     # print(f">> Done with query 2! Total runtime: {round(end_time - start_time, 4)} seconds.")
 
-    print(">> Starting query 3...")
-    start_time = time()
-    CustomQuery().run()
-    end_time = time()
-    print(f">> Done with query 3! Total runtime: {round(end_time - start_time, 4)} seconds.")
+    # print(">> Starting query 3...")
+    # start_time = time()
+    # CustomQuery().run()
+    # end_time = time()
+    # print(f">> Done with query 3! Total runtime: {round(end_time - start_time, 4)} seconds.")
 

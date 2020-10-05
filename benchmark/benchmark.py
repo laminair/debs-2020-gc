@@ -7,7 +7,7 @@ import numpy as np
 class Benchmark():
     
     def __init__(self):
-        self.latecy = []
+        self.latency = []
     
     def inject_time(self, label):
         def _inject(source):
@@ -52,11 +52,13 @@ class Benchmark():
         return _get
     
     def calc_mean_latency(self, x):
-        self.latecy.append(x["latency"])
-        mean_latency = np.mean(self.latecy)
-        
-        print(f"Mean latency @ {x['i'] if 'i' in x.keys() else x['s']}: {round(float(mean_latency) * 1000, 2) } ms. "
-              f"Processing time w/o setup: {np.sum(self.latecy)}")
+        self.latency.append(x["latency"])
+        mean_latency = np.mean(self.latency)
+        idx = x['i'] if 'i' in x.keys() else x['s']
+
+        if idx % 100 == 0 or idx % 14999 == 0:
+            print(f"{idx}, {mean_latency}, {sum(self.latency)}")
+            self.latency = []
     
     def get_message_size(self):
         pass

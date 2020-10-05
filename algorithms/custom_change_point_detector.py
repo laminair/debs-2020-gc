@@ -5,8 +5,6 @@ import rx
 from queue import Queue
 from scipy.signal import savgol_filter
 
-from memory_profiler import profile
-
 
 class ChangePointDetector():
     
