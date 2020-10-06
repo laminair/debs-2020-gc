@@ -210,3 +210,25 @@ class ChangePointDetector():
             return rx.create(subscribe)
         
         return _mark
+    
+    def produce_result(self):
+        def _produce(source):
+            def subscribe(observer, scheduler):
+                def on_next(obj):
+                    observer.on_next({
+                        "s": obj["i"],
+                        "d": obj["change_point"],
+                        "p_smooth": obj["p_smooth"],
+                        "q_smooth": obj["p_smooth"],
+                        "p": obj["p"],
+                        "q": obj["q"],
+                    })
+
+                return source.subscribe(
+                    on_next,
+                    observer.on_error,
+                    observer.on_completed,
+                    scheduler
+                )
+            return rx.create(subscribe)
+        return _produce

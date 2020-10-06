@@ -4,7 +4,7 @@ from time import time
 import numpy as np
 
 
-class Benchmark():
+class LatencyBenchmark():
     
     def __init__(self):
         self.latency = []
