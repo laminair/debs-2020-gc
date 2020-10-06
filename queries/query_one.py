@@ -36,9 +36,10 @@ class QueryOne():
             self.bf.compute_loss(),
             self.bf.process_detected_event(),
             self.bf.prepare_result(),
-            # self.bm.get_latency("start_time")
+            # self.bm.get_latency("start_time"),
+            self.bm.append_kafka_metrics()
         ).subscribe(
-            on_next=lambda x: x,
+            on_next=lambda x:  self.bm.measure_kafka(x), # self.bm.calc_mean_latency(x),
             on_error=lambda error: print(error),
             on_completed=lambda: print("Query 1 done!")
         )

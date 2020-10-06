@@ -1,5 +1,6 @@
 import rx
 from time import time
+from kafka import KafkaConsumer
 
 import numpy as np
 
@@ -59,6 +60,33 @@ class LatencyBenchmark():
         if idx % 100 == 0 or idx % 14999 == 0:
             print(f"{idx}, {mean_latency}, {sum(self.latency)}")
             self.latency = []
+
+    def append_kafka_metrics(self):
+        def _append(source):
+            def subscribe(observer, scheduler):
+                kafka_client = [KafkaConsumer()]
+
+                def on_next(obj):
+                    nonlocal kafka_client
+
+                    if obj["s"] % 1000 == 0 or obj["s"] == 14999:
+                        obj["kafka_metrics"] = kafka_client[0].metrics()
+
+                    observer.on_next(obj)
+
+                return source.subscribe(
+                    on_next,
+                    observer.on_error,
+                    observer.on_completed,
+                    scheduler
+                )
+            return rx.create(subscribe)
+        return _append
+
+    def measure_kafka(self, x):
+        if "kafka_metrics" in x.keys():
+            print(x["kafka_metrics"]["consumer-metrics"])
+
     
     def get_message_size(self):
         pass
