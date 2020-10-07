@@ -2,6 +2,7 @@ from kafka import KafkaConsumer as KC, errors
 from docker_environment.docker_config import wait_for_kafka
 
 import json
+import time
 
 
 class KafkaConsumer(KC):
@@ -18,6 +19,7 @@ class KafkaConsumer(KC):
             key_deserializer=lambda x: json.loads(x.decode('utf-8')),
             consumer_timeout_ms=3 * 1000
         )
+        self.start_time_dict = {}
         
     def subscribe(self, topics=(), pattern=None, listener=None):
         self._subscription.subscribe(topics=topics, pattern=pattern, listener=listener)
@@ -32,9 +34,11 @@ class KafkaConsumer(KC):
             
     def create_subscription(self, topics, observer, scheduler=None):
         self.subscribe(topics=topics)
-
+        
         try:
             for msg in self:
+                self.start_time_dict[msg.value["i"]] = time.time()
+                
                 observer.on_next(msg)
                 
             observer.on_completed()

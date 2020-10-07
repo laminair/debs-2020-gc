@@ -1,5 +1,6 @@
 import rx
 
+
 def split_payload():
     def _split(source):
         def subscribe(observer, scheduler):
@@ -16,7 +17,5 @@ def split_payload():
                 observer.on_completed,
                 scheduler
             )
-
         return rx.create(subscribe)
-
     return _split

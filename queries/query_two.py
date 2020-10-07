@@ -1,4 +1,5 @@
 from kafka_connector.consumer import KafkaConsumer
+from kafka_connector.producer import KafkaProducer
 from input_sorting.separate_payload_from_kafka_message import split_payload
 from input_sorting.transform_data_structure import DataTransformation
 from power_transformation.power_transformation import ElectricTransformation
@@ -18,10 +19,12 @@ class QueryTwo():
             q_size=100,
         )
         self.pq = CustomBuffer()
+        self.kc = KafkaConsumer()
+        self.kp = KafkaProducer()
     
     def run(self):
         rx.create(
-            lambda o, s: KafkaConsumer().create_subscription(topics=["Input_q2", ], observer=o, scheduler=s)
+            lambda o, s: self.kc.create_subscription(topics=["Input_q2", ], observer=o, scheduler=s)
         ).pipe(
             split_payload(),
             self.pq.buffer_and_manage(),
@@ -38,9 +41,8 @@ class QueryTwo():
             self.bf.compute_loss(),
             self.bf.process_detected_event(),
             self.bf.prepare_result(),
-        
         ).subscribe(
-            on_next=lambda x: print(x),
+            on_next=lambda x: self.kp.benchmark_sink(x),
             on_error=lambda error: print(error),
-            on_completed=lambda: print("Query 2 done!")
+            on_completed=lambda: self.kp.show_benchmark_results(start_time_dict=self.kc.start_time_dict)
         )
