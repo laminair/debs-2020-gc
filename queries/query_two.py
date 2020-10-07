@@ -4,6 +4,8 @@ from input_sorting.transform_data_structure import DataTransformation
 from power_transformation.power_transformation import ElectricTransformation
 from algorithms.barsim_algorithm import BarsimAlgorithm
 
+from algorithms.buffer import CustomBuffer
+
 import rx
 
 
@@ -15,12 +17,16 @@ class QueryTwo():
         self.bf = BarsimAlgorithm(
             q_size=100,
         )
+        self.pq = CustomBuffer()
     
     def run(self):
         rx.create(
-            lambda o, s: KafkaConsumer().create_subscription(topics=["Input", ], observer=o, scheduler=s)
+            lambda o, s: KafkaConsumer().create_subscription(topics=["Input_q2", ], observer=o, scheduler=s)
         ).pipe(
             split_payload(),
+            self.pq.buffer_and_manage(),
+            self.pq.sort_buffer(),
+            # self.pq.check_order(),
             self.dt.transform_to_pandas(),
             self.et.active_power(),
             self.et.apparent_power(),
@@ -34,7 +40,7 @@ class QueryTwo():
             self.bf.prepare_result(),
         
         ).subscribe(
-            on_next=lambda x: x,
+            on_next=lambda x: print(x),
             on_error=lambda error: print(error),
-            on_completed=lambda: print("Query 1 done!")
+            on_completed=lambda: print("Query 2 done!")
         )

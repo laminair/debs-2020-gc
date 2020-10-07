@@ -11,20 +11,20 @@ import os
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print(">> Starting query 1...")
+    # print(">> Starting query 1...")
+    # start_time = time.time()
+    # pid = os.getpid()
+    # # profile = HardwareMonitor().profile(pid)
+    # QueryOne().run()
+    #
+    # end_time = time.time()
+    # print(f">> Done with query 1! Total runtime: {round(end_time - start_time, 4)} seconds.")
+
+    print(">> Starting query 2...")
     start_time = time.time()
-    pid = os.getpid()
-    # profile = HardwareMonitor().profile(pid)
-    QueryOne().run()
-
+    QueryTwo().run()
     end_time = time.time()
-    print(f">> Done with query 1! Total runtime: {round(end_time - start_time, 4)} seconds.")
-
-    # print(">> Starting query 2...")
-    # start_time = time()
-    # QueryTwo().run()
-    # end_time = time()
-    # print(f">> Done with query 2! Total runtime: {round(end_time - start_time, 4)} seconds.")
+    print(f">> Done with query 2! Total runtime: {round(end_time - start_time, 4)} seconds.")
 
     # print(">> Starting query 3...")
     # start_time = time()

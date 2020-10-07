@@ -36,6 +36,8 @@ class KafkaConsumer(KC):
         try:
             for msg in self:
                 observer.on_next(msg)
+                
+            observer.on_completed()
 
         except errors.BrokerNotAvailableError as e:
             err = "No Kafka Broker available. Please check your config."
