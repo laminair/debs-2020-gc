@@ -104,7 +104,6 @@ class CustomBuffer():
                 
                 def on_next(obj):
                     nonlocal self
-
                     if self.current_sort_idx in self.sort_q:
                         res = self.sort_q[self.current_sort_idx]
                         observer.on_next(res)
